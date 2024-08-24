@@ -34,8 +34,56 @@ class MainActivity : AppCompatActivity() {
             buttonZero!!.setOnClickListener{ onZeroClicked() }
             buttonDoubleZero!!.setOnClickListener{ onDoubleZeroClicked() }
             buttonDecimalPoint!!.setOnClickListener{ onDecimalPointClicked() }
+            buttonAddition!!.setOnClickListener{ onOperatorClicked(Operator.ADDITION) }
+            buttonSubtraction!!.setOnClickListener{ onOperatorClicked(Operator.SUBTRACTION) }
+            buttonMultiplication!!.setOnClickListener{ onOperatorClicked(Operator.MULTIPLICATION) }
+            buttonDivision!!.setOnClickListener{ onOperatorClicked(Operator.DIVISION) }
+            buttonEqual!!.setOnClickListener{ onEqualsClicked() }
+            buttonAllClear!!.setOnClickListener{ onAllClearClicked() }
+            buttonPlusMinus!!.setOnClickListener{ onPlusMinusClicked() }
+            buttonPercentage!!.setOnClickListener{ onPercentageClicked() }
         }
     }
+
+    private fun onPercentageClicked() {
+        if(inputValue2 == null){
+            val percentage = getInputValue1() / 100
+            inputValue1 = percentage
+            equation.clear().append(percentage)
+            updateInputOnDisplay()
+        } else {
+            val percentageOfValue1 = (getInputValue1() * getInputValue2()) / 100
+            val percentageOfValue2 = (getInputValue2() / 100)
+            result = when(requireNotNull(currentOperator)){
+                Operator.ADDITION -> getInputValue1() + percentageOfValue1
+                Operator.SUBTRACTION -> getInputValue1() - percentageOfValue1
+                Operator.MULTIPLICATION -> getInputValue1() * percentageOfValue2
+                Operator.DIVISION -> getInputValue1() / percentageOfValue2
+            }
+            equation.clear().append(ZERO)
+            updateResultOnDisplay(isPercentage = true)
+            inputValue1 = result
+            result = null
+            inputValue2 = null
+            currentOperator = null
+        }
+    }
+
+
+    private fun onAllClearClicked() {
+        inputValue1 = 0.0
+        inputValue2 = null
+        currentOperator = null
+        result = null
+        equation.clear().append(ZERO)
+        clearDisplay()
+    }
+
+    private fun onOperatorClicked(operator: Operator){
+        onEqualsClicked()
+        currentOperator = operator
+    }
+
 
     private fun onEqualsClicked(){
         if(inputValue2 != null){
@@ -46,6 +94,8 @@ class MainActivity : AppCompatActivity() {
             result = null
             inputValue2 = null
             currentOperator = null
+        } else {
+            equation.clear().append(ZERO)
         }
     }
 
@@ -73,6 +123,14 @@ class MainActivity : AppCompatActivity() {
     private fun onDoubleZeroClicked() {
         if(equation.startsWith(ZERO)) return
         onNumberClicked(DOUBLE_ZERO)
+    }
+
+    private fun onPlusMinusClicked() {
+        if(equation.startsWith(MINUS)) {
+            equation.deleteCharAt(0)
+        } else {
+            equation.insert(0, MINUS)
+        }
     }
 
     private fun getNumericButtons() = with(binding){
