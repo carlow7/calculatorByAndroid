@@ -11,7 +11,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
-    private var inputValue: Double? = 0.0
+    private var inputValue1: Double? = 0.0
     private var inputValue2: Double? = null
     private var currentOperator: Operator? = null
     private var result: Double? = null
@@ -21,6 +21,141 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setListeners()
+    }
+
+    private fun setListeners() {
+        for (button in getNumericButtons()) {
+            button!!.setOnClickListener {
+                onNumberClicked(button.text.toString())
+            }
+        }
+        with(binding) {
+            buttonZero!!.setOnClickListener{ onZeroClicked() }
+            buttonDoubleZero!!.setOnClickListener{ onDoubleZeroClicked() }
+            buttonDecimalPoint!!.setOnClickListener{ onDecimalPointClicked() }
+        }
+    }
+
+    private fun onEqualsClicked(){
+        if(inputValue2 != null){
+            result = calculate()
+            equation.clear().append(ZERO)
+            updateResultOnDisplay()
+            inputValue1 = result
+            result = null
+            inputValue2 = null
+            currentOperator = null
+        }
+    }
+
+    private fun calculate(): Double {
+        return when (requireNotNull(currentOperator)){
+            Operator.ADDITION -> getInputValue1() + getInputValue2()
+            Operator.SUBTRACTION -> getInputValue1() - getInputValue2()
+            Operator.MULTIPLICATION -> getInputValue1() * getInputValue2()
+            Operator.DIVISION -> getInputValue1() / getInputValue2()
+        }
+    }
+
+    private fun onDecimalPointClicked() {
+        if(equation.contains(DECIMAL_POINT)) return
+        equation.append(DECIMAL_POINT)
+        setInput()
+        updateInputOnDisplay()
+    }
+
+    private fun onZeroClicked() {
+        if(equation.startsWith(ZERO)) return
+        onNumberClicked(ZERO)
+    }
+
+    private fun onDoubleZeroClicked() {
+        if(equation.startsWith(ZERO)) return
+        onNumberClicked(DOUBLE_ZERO)
+    }
+
+    private fun getNumericButtons() = with(binding){
+        arrayOf(
+            buttonOne,
+            buttonTwo,
+            buttonThree,
+            buttonFour,
+            buttonFive,
+            buttonSix,
+            buttonSeven,
+            buttonEight,
+            buttonNine,
+            buttonZero
+        )
+    }
+
+    private fun onNumberClicked(numberText: String) {
+        if(equation.startsWith(ZERO)) {
+            equation.deleteCharAt(0)
+        } else if (equation.startsWith("$MINUS$ZERO")) {
+            equation.deleteCharAt(1)
+        }
+        equation.append(numberText)
+        setInput()
+        updateInputOnDisplay()
+    }
+
+    private fun setInput() {
+        if(currentOperator == null) {
+            inputValue1 = equation.toString().toDouble()
+            clearDisplay()
+        } else {
+            inputValue2 = equation.toString().toDouble()
+        }
+    }
+
+    private fun clearDisplay() {
+        with(binding) {
+            textInput!!.text = getFormattedDisplayValue(value = getInputValue1())
+            textEquation!!.text = null
+        }
+    }
+
+    private fun updateResultOnDisplay(isPercentage: Boolean = false) {
+        binding.textInput!!.text = getFormattedDisplayValue(value = result)
+        var inputText2 = getFormattedDisplayValue(value = getInputValue2())
+        if(isPercentage) inputText2 = "$inputText2${getString(R.string.percentage)}%"
+        binding.textEquation!!.text = String.format(
+            "%s %s %s",
+            getFormattedDisplayValue(value = getInputValue1()),
+            getOperatorSymbol(),
+            inputText2
+        )
+
+    }
+
+    private fun updateInputOnDisplay() {
+        if(result == null) {
+            binding.textEquation!!.text = null
+        }
+        binding.textInput!!.text = equation
+    }
+
+    private fun getInputValue1() = inputValue1 ?: 0.0
+    private fun getInputValue2() = inputValue2 ?: 0.0
+
+    private fun getOperatorSymbol(): String {
+        return when(requireNotNull(currentOperator)){
+            Operator.ADDITION -> getString(R.string.addition)
+            Operator.SUBTRACTION -> getString(R.string.subtraction)
+            Operator.MULTIPLICATION -> getString(R.string.multiplication)
+            Operator.DIVISION -> getString(R.string.division)
+        }
+    }
+
+    private fun getFormattedDisplayValue(value: Double?): String? {
+        val originalValue = value ?: return null
+        return if ((originalValue % 1).toInt() == 0) {
+            originalValue.toInt().toString()
+        } else {
+            originalValue.toString()
+        }
     }
 
     enum class Operator {
